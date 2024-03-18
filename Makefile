@@ -614,14 +614,14 @@ release-binaries: ## Builds the binaries to publish with a release
 	RELEASE_BINARY=./cmd/clusterawsadm GOOS=windows GOARCH=arm64 EXT=.exe $(MAKE) release-binary
 
 .PHONY: release-binary
-release-binary: $(RELEASE_DIR) versions.mk ## Release binary
+release-binary: $(RELEASE_DIR) versions.mk trust-git-directory ## Release binary
 	docker run \
-		--rm \
 		-e CGO_ENABLED=0 \
 		-e GOOS=$(GOOS) \
 		-e GOARCH=$(GOARCH) \
 		-e GOCACHE=/tmp/ \
 		--user $$(id -u):$$(id -g) \
+		-v "$$(pwd)/.git/config:/etc/gitconfig" \
 		-v "$$(pwd):/workspace$(DOCKER_VOL_OPTS)" \
 		-w /workspace \
 		$(GO_CONTAINER_IMAGE) \
@@ -659,6 +659,14 @@ upload-staging-artifacts: ## Upload release artifacts to the staging bucket
 .PHONY: upload-gh-artifacts
 upload-gh-artifacts: $(GH) ## Upload artifacts to Github release
 	$(GH) release upload $(VERSION) -R $(GH_REPO) --clobber  $(RELEASE_DIR)/*
+
+.PHONY: trust-git-directory
+trust-git-directory: # Tell git that naming conflicts inside the build container are ok.
+	if [ -z "$(shell git config --get-all safe.directory | grep workspace)" ]; then \
+		echo "Setting workspace directory as safe." \
+		git config --add safe.directory /workspace; \
+	fi
+
 
 IMAGE_PATCH_DIR := $(ARTIFACTS)/image-patch
 
