@@ -46,6 +46,7 @@ E2E_CONF_PATH  ?= $(E2E_DATA_DIR)/e2e_conf.yaml
 E2E_EKS_CONF_PATH ?= $(E2E_DATA_DIR)/e2e_eks_conf.yaml
 KUBETEST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance.yaml)
 EXP_DIR := exp
+GORELEASER_CONFIG := .goreleaser.yaml
 
 # Binaries.
 GO_INSTALL := ./scripts/go_install.sh
@@ -562,11 +563,12 @@ list-image: ## List images for RELEASE_TAG
 	gcloud container images list-tags $(STAGING_REGISTRY)/$(IMAGE) --filter="tags=('$(RELEASE_TAG)')" --format=json
 
 .PHONY: release
-release: clean-release check-release-tag $(RELEASE_DIR)  ## Builds and push container images using the latest git tag for the commit.
+release: clean-release check-release-tag $(RELEASE_DIR) $(GORELEASER)  ## Builds and push container images using the latest git tag for the commit.
 	git checkout "${RELEASE_TAG}"
 	$(MAKE) release-changelog
 	CORE_CONTROLLER_IMG=$(PROD_REGISTRY)/$(CORE_IMAGE_NAME) $(MAKE) release-manifests
 	$(MAKE) release-policies
+	$(GORELEASER) release --config $(GORELEASER_CONFIG) --release-notes $(RELEASE_DIR)/CHANGELOG.md --clean
 
 release-policies: $(RELEASE_POLICIES) ## Release policies
 
@@ -600,8 +602,8 @@ promote-images: $(KPROMO) $(YQ)
 	$(KPROMO) pr --project cluster-api-aws --tag $(RELEASE_TAG) --reviewers "$(shell ./hack/get-project-maintainers.sh ${YQ})" --fork $(USER_FORK) --image cluster-api-aws-controller
 
 .PHONY: release-binaries
-release-binaries: $(GORELEASER) ## Builds only the binaries, not a release. Deprecated, but kept until prow job definitions can be updated.
-	$(GORELEASER) build --snapshot --clean
+release-binaries: $(GORELEASER) ## Builds only the binaries, not a release.
+	$(GORELEASER) build --config $(GORELEASER_CONFIG) --snapshot --clean
 
 .PHONY: release-staging
 release-staging: ## Builds and push container images and manifests to the staging bucket.
