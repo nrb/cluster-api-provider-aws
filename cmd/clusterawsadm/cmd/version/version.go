@@ -41,7 +41,7 @@ var CLIName = "clusterawsadm"
 func Cmd(out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Print version of clusterawsadm",
+		Short: "Print version of clusterctl-aws",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return RunVersion(out, cmd)
@@ -51,7 +51,7 @@ func Cmd(out io.Writer) *cobra.Command {
 	return cmd
 }
 
-// RunVersion provides the version information of clusterawsadm in format depending on arguments
+// RunVersion provides the version information of clusterctl-aws in format depending on arguments
 // specified in cobra.Command.
 func RunVersion(out io.Writer, cmd *cobra.Command) error {
 	clientVersion := version.Get()

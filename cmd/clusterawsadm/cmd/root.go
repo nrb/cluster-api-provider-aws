@@ -45,23 +45,24 @@ var (
 // RootCmd is the Cobra root command.
 func RootCmd() *cobra.Command {
 	newCmd := &cobra.Command{
-		Use:   "clusterawsadm",
-		Short: "Kubernetes Cluster API Provider AWS Management Utility",
+		Use:     "clusterctl-aws",
+		Aliases: []string{"clusterawsadm"},
+		Short:   "Kubernetes Cluster API Provider AWS Management Utility",
 		Long: cmd.LongDesc(`
-			clusterawsadm provides helpers for bootstrapping Kubernetes Cluster
+			clusterctl-aws provides helpers for bootstrapping Kubernetes Cluster
 			API Provider AWS. Use clusterawsadm to view required AWS Identity and Access Management
 			(IAM) policies as JSON docs, or create IAM roles and instance profiles automatically
 			using AWS CloudFormation.
 
-			clusterawsadm additionally helps provide credentials for use with clusterctl.
+			clusterctl-aws additionally helps provide credentials for use with clusterctl.
 		`),
 		Example: cmd.Examples(`
 			# Create AWS Identity and Access Management (IAM) roles for use with
 			# Kubernetes Cluster API Provider AWS.
-			clusterawsadm bootstrap iam create-cloudformation-stack
+			clusterctl-aws bootstrap iam create-cloudformation-stack
 
 			# Encode credentials for use with clusterctl init
-			export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-as-profile)
+			export AWS_B64ENCODED_CREDENTIALS=$(clusterctl-aws bootstrap credentials encode-as-profile)
 			clusterctl init --infrastructure aws
 		`),
 		RunE: func(cmd *cobra.Command, _ []string) error {
