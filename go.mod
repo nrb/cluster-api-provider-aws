@@ -2,7 +2,7 @@ module sigs.k8s.io/cluster-api-provider-aws/v2
 
 go 1.22.0
 
-toolchain go1.22.5
+toolchain go1.22.6
 
 replace (
 	// TODO: remove when component-base updates its prometheus deps (https://github.com/prometheus/client_golang/releases/tag/v1.19.0)
@@ -24,7 +24,7 @@ require (
 	github.com/coreos/ignition v0.35.0
 	github.com/coreos/ignition/v2 v2.16.2
 	github.com/go-logr/logr v1.4.2
-	github.com/gofrs/flock v0.8.1
+	github.com/gofrs/flock v0.12.1
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
