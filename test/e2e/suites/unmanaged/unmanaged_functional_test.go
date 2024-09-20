@@ -149,6 +149,8 @@ var _ = ginkgo.Context("[unmanaged] [functional]", func() {
 				// This is because the entire config map is stored in `last-applied` annotation for tracking.
 				// The workaround is to use server side apply by passing `--server-side` flag to kubectl apply.
 				// More on server side apply here: https://kubernetes.io/docs/reference/using-api/server-side-apply/
+				// TODO(CAPI 1.8?): Need a PR to re-add argument support to this type.
+				// It was removed in https://github.com/kubernetes-sigs/cluster-api/commit/b4349fecaa626865e71b058a8b01e0377fb9e444
 				Args: []string{"--server-side"},
 			}, result)
 
@@ -1009,7 +1011,7 @@ var _ = ginkgo.Context("[unmanaged] [functional]", func() {
 				})
 
 				framework.WaitForClusterDeleted(ctx, framework.WaitForClusterDeletedInput{
-					Getter:  mgmtClusterProxy.GetClient(),
+					Client:  mgmtClusterProxy.GetClient(),
 					Cluster: wlResult.Cluster,
 				}, e2eCtx.E2EConfig.GetIntervals("", "wait-delete-cluster")...)
 
