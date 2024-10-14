@@ -66,6 +66,10 @@ $(BIN_DIR)/start.sh:
 $(BIN_DIR)/restart.sh:
 	curl https://raw.githubusercontent.com/windmilleng/rerun-process-wrapper/master/restart.sh -o $@
 
+CONVERSION_GEN_BIN := conversion-gen
+CONVERSION_GEN := $(BIN_DIR)/$(CONVERSION_GEN_BIN)
+CONVERSION_GEN_PKG := k8s.io/code-generator/cmd/conversion-gen
+
 GO_APIDIFF := $(BIN_DIR)/go-apidiff
 $(GO_APIDIFF): $(BIN_DIR) go.mod go.sum
 	go build -tags=tools -o $@ github.com/joelanford/go-apidiff
@@ -74,9 +78,11 @@ CONTROLLER_GEN := $(BIN_DIR)/controller-gen
 $(CONTROLLER_GEN): $(BIN_DIR) go.mod go.sum # Build controller-gen from tools folder.
 	go build -tags=tools -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
-CONVERSION_GEN := $(BIN_DIR)/conversion-gen
-$(CONVERSION_GEN): $(BIN_DIR) go.mod go.sum $(call rwildcard,.,third_party/conversion-gen/*.*)
-	go build -tags=tools -o $@ ./third_party/conversion-gen
+## We are forcing a rebuilt of conversion-gen via PHONY so that we're always using an up-to-date version.
+## We can't use a versioned name for the binary, because that would be reflected in generated files.
+.PHONY: $(CONVERSION_GEN)
+$(CONVERSION_GEN): # Build conversion-gen.
+	go build -tags=tools -o $@ $(CONVERSION_GEN_PKG)
 
 CONVERSION_VERIFIER := $(BIN_DIR)/conversion-verifier
 $(CONVERSION_VERIFIER): $(BIN_DIR) go.mod go.sum
