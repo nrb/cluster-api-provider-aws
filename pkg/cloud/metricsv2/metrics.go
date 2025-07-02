@@ -24,6 +24,7 @@ import (
 	"time"
 
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/prometheus/client_golang/prometheus"
@@ -100,7 +101,13 @@ func WithMiddlewares(controller string, target runtime.Object) func(stack *middl
 		if err := stack.Finalize.Add(getRequestMetricContextMiddleware(), middleware.Before); err != nil {
 			return fmt.Errorf("failed to add request metric context middleware: %w", err)
 		}
-		if err := stack.Finalize.Insert(getAttemptContextMiddleware(), "Retry", middleware.After); err != nil {
+		// only add our response capturing middleware if the retry middleware is present.
+		if _, ok := stack.Finalize.Get((*retry.Attempt)(nil).ID()); ok {
+			if err := stack.Finalize.Insert(getAttemptResponseContextMiddleware(), (*retry.Attempt)(nil).ID(), middleware.After); err != nil {
+				return fmt.Errorf("failed to add attempt context middleware: %w", err)
+			}
+		}
+		if err := stack.Finalize.Insert(getAttemptResponseContextMiddleware(), "Retry", middleware.After); err != nil {
 			return fmt.Errorf("failed to add attempt context middleware: %w", err)
 		}
 		return stack.Finalize.Add(getRecordAWSPermissionsIssueMiddleware(target), middleware.After)
@@ -150,9 +157,9 @@ func getRequestMetricContextMiddleware() middleware.FinalizeMiddleware {
 	})
 }
 
-// getAttemptContextMiddleware will capture StatusCode and ErrorCode from API call attempt.
+// getAttemptResponseContextMiddleware will capture StatusCode and ErrorCode from API call attempt.
 // This will result in the StatusCode and ErrorCode captured for last attempt when publishing to metrics.
-func getAttemptContextMiddleware() middleware.FinalizeMiddleware {
+func getAttemptResponseContextMiddleware() middleware.FinalizeMiddleware {
 	return middleware.FinalizeMiddlewareFunc("capa/AttemptMetricContextMiddleware", func(ctx context.Context, input middleware.FinalizeInput, handler middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
 		request := getContext(ctx)
 		if request != nil {
